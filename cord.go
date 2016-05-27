@@ -48,10 +48,7 @@ func New(token string, options *WsOptions) Socket {
 	ws := &Websocket{
 		opts:   options,
 		events: newEvents(),
-
-		closer:   make(chan struct{}),
-		outgoing: make(chan []byte),
-		errs:     make(chan error),
+		errs:   make(chan error),
 	}
 
 	ws.start()

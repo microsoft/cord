@@ -43,3 +43,9 @@ const (
 	// used to notify client they have an invalid session id
 	InvalidSession
 )
+
+// IsHandshake returns true if the packet is a unique handshake packet to
+// initialize a connection.
+func (o Operation) IsHandshake() bool {
+	return o == Identify || o == Resume
+}

@@ -8,31 +8,24 @@ import (
 	"io/ioutil"
 	"net/http"
 	"runtime"
+	"strconv"
 	"sync/atomic"
 	"time"
 	"unsafe"
 
+	"github.com/WatchBeam/cord/events"
 	"github.com/WatchBeam/cord/model"
 	"github.com/cenk/backoff"
 	"github.com/gorilla/websocket"
 )
-
-// Identifying bytes for gzip that are used to signal we need to decompress
-// the payload.
-var gzipSignature = []byte{0x1f, 0x8b}
 
 type WsOptions struct {
 	// Handshake packet to send to the server. Note that `compress` and
 	// `properties` will be filled for you.
 	Handshake *model.Handshake
 
-	// How often to send ping frames to the server if we don't get any
-	// other messages. Defaults to 5 seconds.
-	PingInterval time.Duration
-
 	// How long to wait without frames or acknowledgment before we consider
-	// the server to be dead. Should be longer than the PingInterval.
-	// Defaults to twice the PingInterval.
+	// the server to be dead. Defaults to ten seconds.
 	Timeout time.Duration
 
 	// Backoff determines how long to wait between reconnections to the
@@ -47,17 +40,16 @@ type WsOptions struct {
 	// HTTPGatewayRetriever with the given `timeout`.
 	Gateway GatewayRetriever
 
+	// Debugger struct we log incoming/outgoing messages to.
+	Debugger Debugger
+
 	// Headers to send in the websocket handshake.
 	Header http.Header
 }
 
 func (w *WsOptions) fillDefaults(token string) {
-	if w.PingInterval == 0 {
-		w.PingInterval = time.Second * 5
-	}
-
 	if w.Timeout == 0 {
-		w.Timeout = w.PingInterval * 2
+		w.Timeout = 10 * time.Second
 	}
 
 	if w.Backoff == nil {
@@ -85,6 +77,10 @@ func (w *WsOptions) fillDefaults(token string) {
 
 	if w.Handshake == nil {
 		w.Handshake = &model.Handshake{}
+	}
+
+	if w.Debugger == nil {
+		w.Debugger = NilDebugger{}
 	}
 
 	w.Handshake.Compress = true
@@ -131,23 +127,17 @@ func (w *wsConn) Fork() *wsConn {
 // Websocket is an implementation of the Socket interface.
 type Websocket struct {
 	opts   *WsOptions
-	events events
+	events emitter
 
-	ws        unsafe.Pointer // to a wsConn, atomically updated
-	sessionID unsafe.Pointer // to a string, atomically updated
-	lastSeq   uint64         // atomically updated
+	// ws points to a wsConn, atomically updated
+	ws        unsafe.Pointer
+	sessionID unsafe.Pointer
+	lastSeq   uint64 // atomically updated
 	errs      chan error
 }
 
 // start boots the websocket asynchronously.
-func (w *Websocket) start() {
-	w.events.On(Ready(func(r *model.Ready) {
-		sid := r.SessionID
-		atomic.StorePointer(&w.sessionID, unsafe.Pointer(&sid))
-	}))
-
-	go w.restart(nil, nil)
-}
+func (w *Websocket) start() { go w.restart(nil, nil) }
 
 // restart closes the server and attempts to reconnect to Discord. It takes
 // an optional error to log down.
@@ -161,7 +151,7 @@ func (w *Websocket) restart(err error, prev *wsConn) {
 	prev.Close()
 
 	if err != nil {
-		w.errs <- err
+		w.sendErr(err)
 	}
 
 	// Look up the websocket address to connect to.
@@ -185,6 +175,12 @@ func (w *Websocket) establishSocketConnection(gateway string, cnx *wsConn) {
 		return
 	}
 
+	ready, err := w.runHandshake(ws)
+	if err != nil {
+		w.restart(err, cnx)
+		return
+	}
+
 	next := &wsConn{
 		queue: cnx.queue,
 		ws:    ws,
@@ -195,34 +191,66 @@ func (w *Websocket) establishSocketConnection(gateway string, cnx *wsConn) {
 	atomic.StorePointer(&w.ws, unsafe.Pointer(unsafe.Pointer(next)))
 	w.opts.Backoff.Reset()
 
-	go w.readPump(next)
-	go w.writePump(next)
+	atomic.StorePointer(&w.sessionID, unsafe.Pointer(&ready.SessionID))
+	interval := time.Duration(ready.HeartbeatInterval) * time.Millisecond
 
-	if err := w.sendHandshake(); err != nil {
-		w.errs <- err
-	}
+	go w.readPump(next)
+	go w.writePump(next, interval)
 }
 
 // sendHandshake dispatches either an Identify or Resume packet on the
 // connection, depending whether we were connected before.
-func (w *Websocket) sendHandshake() error {
-	sid := (*string)(atomic.LoadPointer(&w.sessionID))
+func (w *Websocket) runHandshake(ws *websocket.Conn) (*model.Ready, error) {
+	var (
+		sid   = (*string)(atomic.LoadPointer(&w.sessionID))
+		data  *Payload
+		err   error
+		ready *model.Ready
+	)
+
 	if sid == nil {
-		return w.Send(Identify, w.opts.Handshake)
+		data, err = w.marshalPayload(Identify, w.opts.Handshake)
+	} else {
+		data, err = w.marshalPayload(Resume, &model.Resume{
+			Token:     w.opts.Handshake.Token,
+			SessionID: *sid,
+			Sequence:  atomic.LoadUint64(&w.lastSeq),
+		})
+	}
+	if err != nil {
+		return nil, err
 	}
 
-	return w.Send(Resume, &model.Resume{
-		Token:     w.opts.Handshake.Token,
-		SessionID: *sid,
-		Sequence:  atomic.LoadUint64(&w.lastSeq),
-	})
+	if err = w.writeMessage(ws, data); err != nil {
+		return nil, err
+	}
+
+	ws.SetReadDeadline(time.Now().Add(w.opts.Timeout))
+	_, message, err := ws.ReadMessage()
+	if err != nil {
+		return nil, err
+	}
+
+	payload, err := w.unmarshalPayload(message)
+	if err != nil {
+		return nil, err
+	}
+	if payload.Event != "READY" {
+		return nil, fmt.Errorf("cord/websocket: expected to get READY event, got %s", payload)
+	}
+
+	err = events.Ready(func(r *model.Ready) { ready = r }).Invoke(payload.Data)
+	go w.events.Dispatch(payload.Event, payload.Data)
+
+	return ready, err
 }
 
 // readPump reads off messages from the socket and dispatches them into the
 // handleIncoming method.
 func (w *Websocket) readPump(cnx *wsConn) {
+	cnx.ws.SetReadDeadline(time.Time{})
+
 	for {
-		cnx.ws.SetReadDeadline(time.Now().Add(w.opts.Timeout))
 		kind, message, err := cnx.ws.ReadMessage()
 		if err != nil {
 			w.restart(err, cnx)
@@ -237,9 +265,19 @@ func (w *Websocket) readPump(cnx *wsConn) {
 	}
 }
 
-// writePump
-func (w *Websocket) writePump(cnx *wsConn) {
-	ticker := time.NewTicker(w.opts.PingInterval)
+func (w *Websocket) writeMessage(ws *websocket.Conn, data json.Marshaler) error {
+	bytes, err := data.MarshalJSON()
+	if err != nil {
+		return err
+	}
+
+	ws.SetWriteDeadline(time.Now().Add(w.opts.Timeout))
+	w.opts.Debugger.Outgoing(bytes)
+	return ws.WriteMessage(websocket.TextMessage, bytes)
+}
+
+func (w *Websocket) writePump(cnx *wsConn, heartbeat time.Duration) {
+	ticker := time.NewTicker(heartbeat)
 	defer ticker.Stop()
 
 	for {
@@ -247,13 +285,17 @@ func (w *Websocket) writePump(cnx *wsConn) {
 
 		select {
 		case <-ticker.C:
-			err = cnx.ws.WriteMessage(websocket.PingMessage, nil)
+			seq := atomic.LoadUint64(&w.lastSeq)
+			err = w.writeMessage(cnx.ws, &Payload{
+				Operation: Heartbeat,
+				Data:      json.RawMessage(strconv.FormatUint(seq, 10)),
+			})
+
 		case msg, ok := <-cnx.queue.Poll():
 			if !ok {
 				return
 			}
-
-			err = cnx.ws.WriteMessage(websocket.TextMessage, msg.b)
+			err = w.writeMessage(cnx.ws, msg.data)
 			msg.result <- err
 		}
 
@@ -276,12 +318,14 @@ func inflate(b []byte) ([]byte, error) {
 
 // unmarshalPayload parses and extracts the payload from the byte slice.
 func (w *Websocket) unmarshalPayload(b []byte) (*Payload, error) {
-	if bytes.HasPrefix(b, gzipSignature) {
+	if len(b) > 0 && b[0] != '{' && b[0] != '[' {
 		var err error
 		if b, err = inflate(b); err != nil {
 			return nil, err
 		}
 	}
+
+	w.opts.Debugger.Incoming(b)
 
 	wrapper := &Payload{}
 	if err := wrapper.UnmarshalJSON(b); err != nil {
@@ -291,12 +335,18 @@ func (w *Websocket) unmarshalPayload(b []byte) (*Payload, error) {
 	return wrapper, nil
 }
 
+// sendErr dispatches an error on the socket and notifies the debugger.
+func (w *Websocket) sendErr(err error) {
+	w.opts.Debugger.Error(err)
+	w.errs <- err
+}
+
 // handleIncoming processes a message from the websocket and dispatches
 // it to clients.
 func (w *Websocket) handleIncoming(b []byte, cnx *wsConn) {
 	wrapper, err := w.unmarshalPayload(b)
 	if err != nil {
-		w.errs <- fmt.Errorf("cord/websocket: error unpacking payload: %s", err)
+		w.sendErr(fmt.Errorf("cord/websocket: error unpacking payload: %s", err))
 		return
 	}
 
@@ -304,48 +354,53 @@ func (w *Websocket) handleIncoming(b []byte, cnx *wsConn) {
 	case Dispatch:
 		atomic.StoreUint64(&w.lastSeq, wrapper.Sequence)
 		if err := w.events.Dispatch(wrapper.Event, wrapper.Data); err != nil {
-			w.errs <- fmt.Errorf("cord/websocket: error dispatching event: %s", err)
+			w.sendErr(fmt.Errorf("cord/websocket: error dispatching event: %s", err))
 		}
 	case Reconnect:
 		w.restart(nil, cnx)
 	case InvalidSession:
+		atomic.StorePointer(&w.sessionID, unsafe.Pointer(nil))
 		w.restart(fmt.Errorf("cord/websocket: invalid session detected"), cnx)
 	default:
-		w.errs <- fmt.Errorf("cord/websocket: unhandled op code %d", wrapper.Operation)
+		w.sendErr(fmt.Errorf("cord/websocket: unhandled op code %d", wrapper.Operation))
 	}
 }
 
 // On implements Socket.On
-func (w *Websocket) On(h Handler) { w.events.On(h) }
+func (w *Websocket) On(h events.Handler) { w.events.On(h) }
 
 // Off implements Socket.Off
-func (w *Websocket) Off(h Handler) { w.events.Off(h) }
+func (w *Websocket) Off(h events.Handler) { w.events.Off(h) }
 
 // Once implements Socket.Once
-func (w *Websocket) Once(h Handler) { w.events.Once(h) }
+func (w *Websocket) Once(h events.Handler) { w.events.Once(h) }
 
 // Errs implements Socket.Errs
 func (w *Websocket) Errs() <-chan error { return w.errs }
 
-// Send implements Socket.Send
-func (w *Websocket) Send(op Operation, data json.Marshaler) error {
+// marshalPayload marshals the provided data for transport over the socket.
+func (w *Websocket) marshalPayload(op Operation, data json.Marshaler) (*Payload, error) {
 	bytes, err := data.MarshalJSON()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	wrapper, err := (&Payload{
+	return &Payload{
 		Operation: op,
 		Data:      bytes,
-	}).MarshalJSON()
+	}, nil
+}
 
+// Send implements Socket.Send
+func (w *Websocket) Send(op Operation, data json.Marshaler) error {
+	payload, err := w.marshalPayload(op, data)
 	if err != nil {
 		return err
 	}
 
 	result := make(chan error, 1)
 	cnx := (*wsConn)(atomic.LoadPointer(&w.ws))
-	cnx.queue.Push(&queuedMessage{result, op, wrapper})
+	cnx.queue.Push(&queuedMessage{payload, result})
 	return <-result
 }
 

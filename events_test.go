@@ -20,7 +20,7 @@ func (m *mockHandler) Invoke(b []byte) error {
 }
 
 func TestHandlerCallsOn(t *testing.T) {
-	e := newEvents()
+	e := newEmitter()
 	h := &mockHandler{}
 	e.On(h)
 
@@ -31,7 +31,7 @@ func TestHandlerCallsOn(t *testing.T) {
 }
 
 func TestHandlerCallsOnOnce(t *testing.T) {
-	e := newEvents()
+	e := newEmitter()
 	h := &mockHandler{}
 	e.Once(h)
 
@@ -42,7 +42,7 @@ func TestHandlerCallsOnOnce(t *testing.T) {
 }
 
 func TestHandlerBubblesError(t *testing.T) {
-	e := newEvents()
+	e := newEmitter()
 	h := &mockHandler{}
 	e.Once(h)
 
@@ -53,7 +53,7 @@ func TestHandlerBubblesError(t *testing.T) {
 }
 
 func TestHandlerRemoves(t *testing.T) {
-	e := newEvents()
+	e := newEmitter()
 	h := &mockHandler{}
 	e.On(h)
 	e.Off(h)

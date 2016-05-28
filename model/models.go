@@ -206,13 +206,13 @@ type Event struct {
 
 // A Ready stores all data for the websocket READY event.
 type Ready struct {
-	Version           int           `json:"v"`
-	SessionID         string        `json:"session_id"`
-	HeartbeatInterval time.Duration `json:"heartbeat_interval"`
-	User              *User         `json:"user"`
-	ReadState         []*ReadState  `json:"read_state"`
-	PrivateChannels   []*Channel    `json:"private_channels"`
-	Guilds            []*Guild      `json:"guilds"`
+	Version           int          `json:"v"`
+	SessionID         string       `json:"session_id"`
+	HeartbeatInterval uint         `json:"heartbeat_interval"`
+	User              *User        `json:"user"`
+	ReadState         []*ReadState `json:"read_state"`
+	PrivateChannels   []*Channel   `json:"private_channels"`
+	Guilds            []*Guild     `json:"guilds"`
 }
 
 // A RateLimit struct holds information related to a specific rate limit.
@@ -378,9 +378,8 @@ type Resume struct {
 type Handshake struct {
 	Token          string              `json:"token"`
 	Properties     HandshakeProperties `json:"properties"`
-	LargeThreshold int                 `json:"large_threshold"`
 	Compress       bool                `json:"compress"`
-	Shard          []uint              `json:"shard"`
+	LargeThreshold int                 `json:"large_threshold"`
 }
 
 type HandshakeProperties struct {

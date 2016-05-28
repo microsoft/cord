@@ -1,17 +1,10 @@
 package cord
 
-import "encoding/json"
+import (
+	"encoding/json"
 
-// Handler defines a type that can be passed into a Socket to listen for
-// an event being broadcasted.
-type Handler interface {
-	// Name returns the name of the packet that this handler process, the
-	// "t" key in Discord payloads.
-	Name() string
-	// Invoke is called with the raw, still-marshalled byte payload from
-	// the socket. It may return an error if unmarshalling fails.
-	Invoke(b []byte) error
-}
+	"github.com/WatchBeam/cord/events"
+)
 
 // The Socket represents a connection to a Discord server. All methods on
 // the socket are safe for concurrent use.
@@ -21,13 +14,13 @@ type Socket interface {
 	Send(op Operation, data json.Marshaler) error
 
 	// On attaches a handler to an event.
-	On(h Handler)
+	On(h events.Handler)
 
 	// On attaches a handler that's called once when an event happens.
-	Once(h Handler)
+	Once(h events.Handler)
 
 	// Off detaches a previously-attached handler from an event.
-	Off(h Handler)
+	Off(h events.Handler)
 
 	// Errs returns a channel of errors which may occur asynchronously
 	// on the websocket.
@@ -47,7 +40,7 @@ func New(token string, options *WsOptions) Socket {
 
 	ws := &Websocket{
 		opts:   options,
-		events: newEvents(),
+		events: newEmitter(),
 		errs:   make(chan error),
 	}
 

@@ -1,11 +1,12 @@
-GO_SRC = $(wildcard *.go) handlers.go
+EVENTS = events/events.go
+GO_SRC = $(wildcard *.go) $(EVENTS)
 
 JSON_SUFFIX = _easyjson.go
 JSON_SRC = model/models.go packets.go
 JSON_GEN = $(addsuffix $(JSON_SUFFIX), $(basename $(JSON_SRC)))
 
-cord: $(JSON_GEN) $(GO_SRC) check
-	@printf " ✔ finished building %s \n" $@
+all: events $(JSON_GEN) $(GO_SRC) check
+	@printf " ✔ Finished %s \n" $@
 
 json: $(JSON_GEN)
 
@@ -18,8 +19,9 @@ endif
 	@rm -f $@
 	@easyjson -all $^
 
-handlers.go:
-	@go run ./cmd/genhands/main.go \
+events:
+	@printf " → Generating %s \n" $@
+	@go run ./cmd/genevents/main.go \
 		CHANNEL_CREATE=Channel \
 		CHANNEL_UPDATE=Channel \
 		CHANNEL_DELETE=Channel \
@@ -47,16 +49,15 @@ handlers.go:
 		USER_GUILD_SETTINGS_UPDATE=UserGuildSettings \
 		TYPING_START=TypingStart \
 		VOICE_SERVER_UPDATE=VoiceServerUpdate \
-		VOICE_STATE_UPDATE=VoiceState
+		VOICE_STATE_UPDATE=VoiceState > $(EVENTS)
 
-	@printf " → Generating handler functions \n" $@
 
 check: $(JSON_GEN) $(GO_SRC)
-	@go test ./...
+	@printf " → Running tests\n"
+	@go test -race ./...
 	@go vet ./...
-	@printf " → Tests are green\n"
 
 clean:
-	rm -f $(JSON_GEN) handlers.go
+	rm -f $(JSON_GEN) $(EVENTS)
 
-.PHONY: clean check json handlers.go
+.PHONY: clean check json events

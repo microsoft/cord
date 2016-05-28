@@ -1,21 +1,33 @@
 package cord
 
 import (
+	"bytes"
+	"compress/zlib"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/WatchBeam/cord/events"
 	"github.com/WatchBeam/cord/model"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/suite"
+)
+
+var (
+	readyPacket = []byte(`{
+        "op":0,
+        "t": "READY",
+        "s": 1,
+        "d": {"session_id": "asdf", "heartbeat_interval": 10000}
+    }`)
 )
 
 type WebsocketSuite struct {
 	suite.Suite
 	ts        *httptest.Server
 	retriever GatewayRetriever
-	onConnect func(c *websocket.Conn)
+	onConnect chan func(c *websocket.Conn)
 	socket    *Websocket
 	closer    chan struct{}
 }
@@ -30,14 +42,17 @@ func (w *WebsocketSuite) SetupTest() {
 		if err != nil {
 			panic(err)
 		}
-		w.onConnect(c)
+		(<-w.onConnect)(c)
 	}))
 
 	w.closer = make(chan struct{})
+	w.onConnect = make(chan func(c *websocket.Conn), 16)
 	w.socket = New("tooken", &WsOptions{
 		Gateway: testGatewayRetriever{strings.Replace(w.ts.URL, "http://", "ws://", 1)},
+		Handshake: &model.Handshake{
+			Properties: model.HandshakeProperties{OS: "darwin"},
+		},
 	}).(*Websocket)
-	w.socket.opts.Handshake.Properties.OS = "darwin" // normalize for testing
 }
 
 func (w *WebsocketSuite) panicOnError() {
@@ -58,44 +73,58 @@ func (w *WebsocketSuite) TeardownTest() {
 }
 
 func (w *WebsocketSuite) TestHandshakesAndReconnectsCorrectly() {
-	num := 0
-
-	w.onConnect = func(c *websocket.Conn) {
+	w.onConnect <- func(c *websocket.Conn) {
 		_, msg, err := c.ReadMessage()
 		w.Nil(err)
+		w.Equal(`{"op":2,"d":{"token":"tooken","properties":{"$os":"darwin",`+
+			`"$browser":"Cord 1.0","$device":"","$referer":"",`+
+			`"$referring_domain":""},"compress":true,"large_threshold":0},`+
+			`"s":0,"t":""}`, string(msg))
+		c.WriteMessage(websocket.TextMessage, readyPacket)
+		c.Close()
+	}
 
-		if num == 0 {
-			// first connect
-			w.Equal(`{"op":2,"d":{"token":"tooken","properties":{"$os":"darwin",`+
-				`"$browser":"Cord 1.0","$device":"","$referer":"",`+
-				`"$referring_domain":""},"large_threshold":0,"compress":true,`+
-				`"shard":[]},"s":0,"t":""}`, string(msg))
-		} else {
-			// reconnect
-			w.Equal(`{"op":6,"d":{"token":"tooken","session_id":"asdf",`+
-				`"seq":1},"s":0,"t":""}`, string(msg))
-		}
-		num++
-
-		c.WriteMessage(websocket.TextMessage, []byte(`{
-            "op":0,
-            "t": "READY",
-            "s": 1,
-            "d": {"session_id": "asdf"}
-        }`))
+	w.onConnect <- func(c *websocket.Conn) {
+		_, msg, err := c.ReadMessage()
+		w.Nil(err)
+		w.Equal(`{"op":6,"d":{"token":"tooken","session_id":"asdf",`+
+			`"seq":0},"s":0,"t":""}`, string(msg))
+		c.WriteMessage(websocket.TextMessage, readyPacket)
 		c.Close()
 	}
 
 	done := make(chan struct{})
-	w.socket.Once(Ready(func(r *model.Ready) {
-		// w.Equal("asdf", w.socket.sessionID)
-		// w.Equal(uint64(1), w.socket.lastSeq)
+	w.socket.Once(events.Ready(func(r *model.Ready) {
+		w.Equal("asdf", r.SessionID)
 		// closing the underlying connection will result in an EOF error
-		w.IsType(&websocket.CloseError{}, <-w.socket.Errs())
+		<-w.socket.Errs()
 
-		w.socket.Once(Ready(func(r *model.Ready) {
+		w.socket.Once(events.Ready(func(r *model.Ready) {
 			close(done)
 		}))
+	}))
+
+	<-done
+}
+
+func (w *WebsocketSuite) TestReadsGzippedData() {
+	w.onConnect <- func(c *websocket.Conn) {
+		_, _, err := c.ReadMessage()
+		w.Nil(err)
+
+		var b bytes.Buffer
+		zw := zlib.NewWriter(&b)
+		zw.Write(readyPacket)
+		zw.Close()
+		c.WriteMessage(websocket.BinaryMessage, b.Bytes())
+	}
+
+	go w.panicOnError()
+
+	done := make(chan struct{})
+	w.socket.Once(events.Ready(func(r *model.Ready) {
+		w.Equal("asdf", r.SessionID)
+		close(done)
 	}))
 
 	<-done

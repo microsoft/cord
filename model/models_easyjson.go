@@ -114,24 +114,10 @@ func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Handshake(in *jlex
 			out.Token = string(in.String())
 		case "properties":
 			(out.Properties).UnmarshalEasyJSON(in)
-		case "large_threshold":
-			out.LargeThreshold = int(in.Int())
 		case "compress":
 			out.Compress = bool(in.Bool())
-		case "shard":
-			in.Delim('[')
-			if !in.IsDelim(']') {
-				out.Shard = make([]uint, 0, 8)
-			} else {
-				out.Shard = nil
-			}
-			for !in.IsDelim(']') {
-				var v1 uint
-				v1 = uint(in.Uint())
-				out.Shard = append(out.Shard, v1)
-				in.WantComma()
-			}
-			in.Delim(']')
+		case "large_threshold":
+			out.LargeThreshold = int(in.Int())
 		default:
 			in.SkipRecursive()
 		}
@@ -159,27 +145,14 @@ func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_Handshake(out *jwr
 		out.RawByte(',')
 	}
 	first = false
-	out.RawString("\"large_threshold\":")
-	out.Int(int(in.LargeThreshold))
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
 	out.RawString("\"compress\":")
 	out.Bool(bool(in.Compress))
 	if !first {
 		out.RawByte(',')
 	}
 	first = false
-	out.RawString("\"shard\":")
-	out.RawByte('[')
-	for v2, v3 := range in.Shard {
-		if v2 > 0 {
-			out.RawByte(',')
-		}
-		out.Uint(uint(v3))
-	}
-	out.RawByte(']')
+	out.RawString("\"large_threshold\":")
+	out.Int(int(in.LargeThreshold))
 	out.RawByte('}')
 }
 func (v Handshake) MarshalJSON() ([]byte, error) {
@@ -822,15 +795,15 @@ func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Message(in *jlexer
 				out.Attachments = nil
 			}
 			for !in.IsDelim(']') {
-				var v4 *Attachment
+				var v1 *Attachment
 				if in.IsNull() {
 					in.Skip()
-					v4 = nil
+					v1 = nil
 				} else {
-					v4 = new(Attachment)
-					(*v4).UnmarshalEasyJSON(in)
+					v1 = new(Attachment)
+					(*v1).UnmarshalEasyJSON(in)
 				}
-				out.Attachments = append(out.Attachments, v4)
+				out.Attachments = append(out.Attachments, v1)
 				in.WantComma()
 			}
 			in.Delim(']')
@@ -842,15 +815,15 @@ func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Message(in *jlexer
 				out.Embeds = nil
 			}
 			for !in.IsDelim(']') {
-				var v5 *Embed
+				var v2 *Embed
 				if in.IsNull() {
 					in.Skip()
-					v5 = nil
+					v2 = nil
 				} else {
-					v5 = new(Embed)
-					(*v5).UnmarshalEasyJSON(in)
+					v2 = new(Embed)
+					(*v2).UnmarshalEasyJSON(in)
 				}
-				out.Embeds = append(out.Embeds, v5)
+				out.Embeds = append(out.Embeds, v2)
 				in.WantComma()
 			}
 			in.Delim(']')
@@ -862,15 +835,15 @@ func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Message(in *jlexer
 				out.Mentions = nil
 			}
 			for !in.IsDelim(']') {
-				var v6 *User
+				var v3 *User
 				if in.IsNull() {
 					in.Skip()
-					v6 = nil
+					v3 = nil
 				} else {
-					v6 = new(User)
-					(*v6).UnmarshalEasyJSON(in)
+					v3 = new(User)
+					(*v3).UnmarshalEasyJSON(in)
 				}
-				out.Mentions = append(out.Mentions, v6)
+				out.Mentions = append(out.Mentions, v3)
 				in.WantComma()
 			}
 			in.Delim(']')
@@ -943,14 +916,14 @@ func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_Message(out *jwrit
 	first = false
 	out.RawString("\"attachments\":")
 	out.RawByte('[')
-	for v7, v8 := range in.Attachments {
-		if v7 > 0 {
+	for v4, v5 := range in.Attachments {
+		if v4 > 0 {
 			out.RawByte(',')
 		}
-		if v8 == nil {
+		if v5 == nil {
 			out.RawString("null")
 		} else {
-			(*v8).MarshalEasyJSON(out)
+			(*v5).MarshalEasyJSON(out)
 		}
 	}
 	out.RawByte(']')
@@ -960,14 +933,14 @@ func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_Message(out *jwrit
 	first = false
 	out.RawString("\"embeds\":")
 	out.RawByte('[')
-	for v9, v10 := range in.Embeds {
-		if v9 > 0 {
+	for v6, v7 := range in.Embeds {
+		if v6 > 0 {
 			out.RawByte(',')
 		}
-		if v10 == nil {
+		if v7 == nil {
 			out.RawString("null")
 		} else {
-			(*v10).MarshalEasyJSON(out)
+			(*v7).MarshalEasyJSON(out)
 		}
 	}
 	out.RawByte(']')
@@ -977,14 +950,14 @@ func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_Message(out *jwrit
 	first = false
 	out.RawString("\"mentions\":")
 	out.RawByte('[')
-	for v11, v12 := range in.Mentions {
-		if v11 > 0 {
+	for v8, v9 := range in.Mentions {
+		if v8 > 0 {
 			out.RawByte(',')
 		}
-		if v12 == nil {
+		if v9 == nil {
 			out.RawString("null")
 		} else {
-			(*v12).MarshalEasyJSON(out)
+			(*v9).MarshalEasyJSON(out)
 		}
 	}
 	out.RawByte(']')
@@ -1039,15 +1012,15 @@ func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_UserGuildSettings(
 				out.ChannelOverrides = nil
 			}
 			for !in.IsDelim(']') {
-				var v13 *UserGuildSettingsChannelOverride
+				var v10 *UserGuildSettingsChannelOverride
 				if in.IsNull() {
 					in.Skip()
-					v13 = nil
+					v10 = nil
 				} else {
-					v13 = new(UserGuildSettingsChannelOverride)
-					(*v13).UnmarshalEasyJSON(in)
+					v10 = new(UserGuildSettingsChannelOverride)
+					(*v10).UnmarshalEasyJSON(in)
 				}
-				out.ChannelOverrides = append(out.ChannelOverrides, v13)
+				out.ChannelOverrides = append(out.ChannelOverrides, v10)
 				in.WantComma()
 			}
 			in.Delim(']')
@@ -1098,14 +1071,14 @@ func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_UserGuildSettings(
 	first = false
 	out.RawString("\"channel_overrides\":")
 	out.RawByte('[')
-	for v14, v15 := range in.ChannelOverrides {
-		if v14 > 0 {
+	for v11, v12 := range in.ChannelOverrides {
+		if v11 > 0 {
 			out.RawByte(',')
 		}
-		if v15 == nil {
+		if v12 == nil {
 			out.RawString("null")
 		} else {
-			(*v15).MarshalEasyJSON(out)
+			(*v12).MarshalEasyJSON(out)
 		}
 	}
 	out.RawByte(']')
@@ -1220,15 +1193,15 @@ func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_GuildEmojisUpdate(
 				out.Emojis = nil
 			}
 			for !in.IsDelim(']') {
-				var v16 *Emoji
+				var v13 *Emoji
 				if in.IsNull() {
 					in.Skip()
-					v16 = nil
+					v13 = nil
 				} else {
-					v16 = new(Emoji)
-					(*v16).UnmarshalEasyJSON(in)
+					v13 = new(Emoji)
+					(*v13).UnmarshalEasyJSON(in)
 				}
-				out.Emojis = append(out.Emojis, v16)
+				out.Emojis = append(out.Emojis, v13)
 				in.WantComma()
 			}
 			in.Delim(']')
@@ -1255,14 +1228,14 @@ func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_GuildEmojisUpdate(
 	first = false
 	out.RawString("\"emojis\":")
 	out.RawByte('[')
-	for v17, v18 := range in.Emojis {
-		if v17 > 0 {
+	for v14, v15 := range in.Emojis {
+		if v14 > 0 {
 			out.RawByte(',')
 		}
-		if v18 == nil {
+		if v15 == nil {
 			out.RawString("null")
 		} else {
-			(*v18).MarshalEasyJSON(out)
+			(*v15).MarshalEasyJSON(out)
 		}
 	}
 	out.RawByte(']')
@@ -1623,9 +1596,9 @@ func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_PresenceUpdate(in 
 				out.Roles = nil
 			}
 			for !in.IsDelim(']') {
-				var v19 string
-				v19 = string(in.String())
-				out.Roles = append(out.Roles, v19)
+				var v16 string
+				v16 = string(in.String())
+				out.Roles = append(out.Roles, v16)
 				in.WantComma()
 			}
 			in.Delim(']')
@@ -1674,11 +1647,11 @@ func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_PresenceUpdate(out
 	first = false
 	out.RawString("\"roles\":")
 	out.RawByte('[')
-	for v20, v21 := range in.Roles {
-		if v20 > 0 {
+	for v17, v18 := range in.Roles {
+		if v17 > 0 {
 			out.RawByte(',')
 		}
-		out.String(string(v21))
+		out.String(string(v18))
 	}
 	out.RawByte(']')
 	if !first {
@@ -1943,7 +1916,7 @@ func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Ready(in *jlexer.L
 		case "session_id":
 			out.SessionID = string(in.String())
 		case "heartbeat_interval":
-			out.HeartbeatInterval = time.Duration(in.Int64())
+			out.HeartbeatInterval = uint(in.Uint())
 		case "user":
 			if in.IsNull() {
 				in.Skip()
@@ -1960,15 +1933,15 @@ func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Ready(in *jlexer.L
 				out.ReadState = nil
 			}
 			for !in.IsDelim(']') {
-				var v22 *ReadState
+				var v19 *ReadState
 				if in.IsNull() {
 					in.Skip()
-					v22 = nil
+					v19 = nil
 				} else {
-					v22 = new(ReadState)
-					(*v22).UnmarshalEasyJSON(in)
+					v19 = new(ReadState)
+					(*v19).UnmarshalEasyJSON(in)
 				}
-				out.ReadState = append(out.ReadState, v22)
+				out.ReadState = append(out.ReadState, v19)
 				in.WantComma()
 			}
 			in.Delim(']')
@@ -1980,15 +1953,15 @@ func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Ready(in *jlexer.L
 				out.PrivateChannels = nil
 			}
 			for !in.IsDelim(']') {
-				var v23 *Channel
+				var v20 *Channel
 				if in.IsNull() {
 					in.Skip()
-					v23 = nil
+					v20 = nil
 				} else {
-					v23 = new(Channel)
-					(*v23).UnmarshalEasyJSON(in)
+					v20 = new(Channel)
+					(*v20).UnmarshalEasyJSON(in)
 				}
-				out.PrivateChannels = append(out.PrivateChannels, v23)
+				out.PrivateChannels = append(out.PrivateChannels, v20)
 				in.WantComma()
 			}
 			in.Delim(']')
@@ -2000,15 +1973,15 @@ func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Ready(in *jlexer.L
 				out.Guilds = nil
 			}
 			for !in.IsDelim(']') {
-				var v24 *Guild
+				var v21 *Guild
 				if in.IsNull() {
 					in.Skip()
-					v24 = nil
+					v21 = nil
 				} else {
-					v24 = new(Guild)
-					(*v24).UnmarshalEasyJSON(in)
+					v21 = new(Guild)
+					(*v21).UnmarshalEasyJSON(in)
 				}
-				out.Guilds = append(out.Guilds, v24)
+				out.Guilds = append(out.Guilds, v21)
 				in.WantComma()
 			}
 			in.Delim(']')
@@ -2040,7 +2013,7 @@ func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_Ready(out *jwriter
 	}
 	first = false
 	out.RawString("\"heartbeat_interval\":")
-	out.Int64(int64(in.HeartbeatInterval))
+	out.Uint(uint(in.HeartbeatInterval))
 	if !first {
 		out.RawByte(',')
 	}
@@ -2057,14 +2030,14 @@ func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_Ready(out *jwriter
 	first = false
 	out.RawString("\"read_state\":")
 	out.RawByte('[')
-	for v25, v26 := range in.ReadState {
-		if v25 > 0 {
+	for v22, v23 := range in.ReadState {
+		if v22 > 0 {
 			out.RawByte(',')
 		}
-		if v26 == nil {
+		if v23 == nil {
 			out.RawString("null")
 		} else {
-			(*v26).MarshalEasyJSON(out)
+			(*v23).MarshalEasyJSON(out)
 		}
 	}
 	out.RawByte(']')
@@ -2074,14 +2047,14 @@ func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_Ready(out *jwriter
 	first = false
 	out.RawString("\"private_channels\":")
 	out.RawByte('[')
-	for v27, v28 := range in.PrivateChannels {
-		if v27 > 0 {
+	for v24, v25 := range in.PrivateChannels {
+		if v24 > 0 {
 			out.RawByte(',')
 		}
-		if v28 == nil {
+		if v25 == nil {
 			out.RawString("null")
 		} else {
-			(*v28).MarshalEasyJSON(out)
+			(*v25).MarshalEasyJSON(out)
 		}
 	}
 	out.RawByte(']')
@@ -2091,14 +2064,14 @@ func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_Ready(out *jwriter
 	first = false
 	out.RawString("\"guilds\":")
 	out.RawByte('[')
-	for v29, v30 := range in.Guilds {
-		if v29 > 0 {
+	for v26, v27 := range in.Guilds {
+		if v26 > 0 {
 			out.RawByte(',')
 		}
-		if v30 == nil {
+		if v27 == nil {
 			out.RawString("null")
 		} else {
-			(*v30).MarshalEasyJSON(out)
+			(*v27).MarshalEasyJSON(out)
 		}
 	}
 	out.RawByte(']')
@@ -2243,9 +2216,9 @@ func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Settings(in *jlexe
 				out.MutedChannels = nil
 			}
 			for !in.IsDelim(']') {
-				var v31 string
-				v31 = string(in.String())
-				out.MutedChannels = append(out.MutedChannels, v31)
+				var v28 string
+				v28 = string(in.String())
+				out.MutedChannels = append(out.MutedChannels, v28)
 				in.WantComma()
 			}
 			in.Delim(']')
@@ -2308,11 +2281,11 @@ func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_Settings(out *jwri
 	first = false
 	out.RawString("\"muted_channels\":")
 	out.RawByte('[')
-	for v32, v33 := range in.MutedChannels {
-		if v32 > 0 {
+	for v29, v30 := range in.MutedChannels {
+		if v29 > 0 {
 			out.RawByte(',')
 		}
-		out.String(string(v33))
+		out.String(string(v30))
 	}
 	out.RawByte(']')
 	out.RawByte('}')
@@ -2480,9 +2453,9 @@ func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Member(in *jlexer.
 				out.Roles = nil
 			}
 			for !in.IsDelim(']') {
-				var v34 string
-				v34 = string(in.String())
-				out.Roles = append(out.Roles, v34)
+				var v31 string
+				v31 = string(in.String())
+				out.Roles = append(out.Roles, v31)
 				in.WantComma()
 			}
 			in.Delim(']')
@@ -2537,11 +2510,11 @@ func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_Member(out *jwrite
 	first = false
 	out.RawString("\"roles\":")
 	out.RawByte('[')
-	for v35, v36 := range in.Roles {
-		if v35 > 0 {
+	for v32, v33 := range in.Roles {
+		if v32 > 0 {
 			out.RawByte(',')
 		}
-		out.String(string(v36))
+		out.String(string(v33))
 	}
 	out.RawByte(']')
 	out.RawByte('}')
@@ -3045,15 +3018,15 @@ func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Guild(in *jlexer.L
 				out.Roles = nil
 			}
 			for !in.IsDelim(']') {
-				var v37 *Role
+				var v34 *Role
 				if in.IsNull() {
 					in.Skip()
-					v37 = nil
+					v34 = nil
 				} else {
-					v37 = new(Role)
-					(*v37).UnmarshalEasyJSON(in)
+					v34 = new(Role)
+					(*v34).UnmarshalEasyJSON(in)
 				}
-				out.Roles = append(out.Roles, v37)
+				out.Roles = append(out.Roles, v34)
 				in.WantComma()
 			}
 			in.Delim(']')
@@ -3065,15 +3038,15 @@ func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Guild(in *jlexer.L
 				out.Emojis = nil
 			}
 			for !in.IsDelim(']') {
-				var v38 *Emoji
+				var v35 *Emoji
 				if in.IsNull() {
 					in.Skip()
-					v38 = nil
+					v35 = nil
 				} else {
-					v38 = new(Emoji)
-					(*v38).UnmarshalEasyJSON(in)
+					v35 = new(Emoji)
+					(*v35).UnmarshalEasyJSON(in)
 				}
-				out.Emojis = append(out.Emojis, v38)
+				out.Emojis = append(out.Emojis, v35)
 				in.WantComma()
 			}
 			in.Delim(']')
@@ -3085,15 +3058,15 @@ func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Guild(in *jlexer.L
 				out.Members = nil
 			}
 			for !in.IsDelim(']') {
-				var v39 *Member
+				var v36 *Member
 				if in.IsNull() {
 					in.Skip()
-					v39 = nil
+					v36 = nil
 				} else {
-					v39 = new(Member)
-					(*v39).UnmarshalEasyJSON(in)
+					v36 = new(Member)
+					(*v36).UnmarshalEasyJSON(in)
 				}
-				out.Members = append(out.Members, v39)
+				out.Members = append(out.Members, v36)
 				in.WantComma()
 			}
 			in.Delim(']')
@@ -3105,15 +3078,15 @@ func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Guild(in *jlexer.L
 				out.Presences = nil
 			}
 			for !in.IsDelim(']') {
-				var v40 *Presence
+				var v37 *Presence
 				if in.IsNull() {
 					in.Skip()
-					v40 = nil
+					v37 = nil
 				} else {
-					v40 = new(Presence)
-					(*v40).UnmarshalEasyJSON(in)
+					v37 = new(Presence)
+					(*v37).UnmarshalEasyJSON(in)
 				}
-				out.Presences = append(out.Presences, v40)
+				out.Presences = append(out.Presences, v37)
 				in.WantComma()
 			}
 			in.Delim(']')
@@ -3125,15 +3098,15 @@ func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Guild(in *jlexer.L
 				out.Channels = nil
 			}
 			for !in.IsDelim(']') {
-				var v41 *Channel
+				var v38 *Channel
 				if in.IsNull() {
 					in.Skip()
-					v41 = nil
+					v38 = nil
 				} else {
-					v41 = new(Channel)
-					(*v41).UnmarshalEasyJSON(in)
+					v38 = new(Channel)
+					(*v38).UnmarshalEasyJSON(in)
 				}
-				out.Channels = append(out.Channels, v41)
+				out.Channels = append(out.Channels, v38)
 				in.WantComma()
 			}
 			in.Delim(']')
@@ -3145,15 +3118,15 @@ func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Guild(in *jlexer.L
 				out.VoiceStates = nil
 			}
 			for !in.IsDelim(']') {
-				var v42 *VoiceState
+				var v39 *VoiceState
 				if in.IsNull() {
 					in.Skip()
-					v42 = nil
+					v39 = nil
 				} else {
-					v42 = new(VoiceState)
-					(*v42).UnmarshalEasyJSON(in)
+					v39 = new(VoiceState)
+					(*v39).UnmarshalEasyJSON(in)
 				}
-				out.VoiceStates = append(out.VoiceStates, v42)
+				out.VoiceStates = append(out.VoiceStates, v39)
 				in.WantComma()
 			}
 			in.Delim(']')
@@ -3260,14 +3233,14 @@ func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_Guild(out *jwriter
 	first = false
 	out.RawString("\"roles\":")
 	out.RawByte('[')
-	for v43, v44 := range in.Roles {
-		if v43 > 0 {
+	for v40, v41 := range in.Roles {
+		if v40 > 0 {
 			out.RawByte(',')
 		}
-		if v44 == nil {
+		if v41 == nil {
 			out.RawString("null")
 		} else {
-			(*v44).MarshalEasyJSON(out)
+			(*v41).MarshalEasyJSON(out)
 		}
 	}
 	out.RawByte(']')
@@ -3277,14 +3250,14 @@ func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_Guild(out *jwriter
 	first = false
 	out.RawString("\"emojis\":")
 	out.RawByte('[')
-	for v45, v46 := range in.Emojis {
-		if v45 > 0 {
+	for v42, v43 := range in.Emojis {
+		if v42 > 0 {
 			out.RawByte(',')
 		}
-		if v46 == nil {
+		if v43 == nil {
 			out.RawString("null")
 		} else {
-			(*v46).MarshalEasyJSON(out)
+			(*v43).MarshalEasyJSON(out)
 		}
 	}
 	out.RawByte(']')
@@ -3294,14 +3267,14 @@ func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_Guild(out *jwriter
 	first = false
 	out.RawString("\"members\":")
 	out.RawByte('[')
-	for v47, v48 := range in.Members {
-		if v47 > 0 {
+	for v44, v45 := range in.Members {
+		if v44 > 0 {
 			out.RawByte(',')
 		}
-		if v48 == nil {
+		if v45 == nil {
 			out.RawString("null")
 		} else {
-			(*v48).MarshalEasyJSON(out)
+			(*v45).MarshalEasyJSON(out)
 		}
 	}
 	out.RawByte(']')
@@ -3311,14 +3284,14 @@ func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_Guild(out *jwriter
 	first = false
 	out.RawString("\"presences\":")
 	out.RawByte('[')
-	for v49, v50 := range in.Presences {
-		if v49 > 0 {
+	for v46, v47 := range in.Presences {
+		if v46 > 0 {
 			out.RawByte(',')
 		}
-		if v50 == nil {
+		if v47 == nil {
 			out.RawString("null")
 		} else {
-			(*v50).MarshalEasyJSON(out)
+			(*v47).MarshalEasyJSON(out)
 		}
 	}
 	out.RawByte(']')
@@ -3328,14 +3301,14 @@ func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_Guild(out *jwriter
 	first = false
 	out.RawString("\"channels\":")
 	out.RawByte('[')
-	for v51, v52 := range in.Channels {
-		if v51 > 0 {
+	for v48, v49 := range in.Channels {
+		if v48 > 0 {
 			out.RawByte(',')
 		}
-		if v52 == nil {
+		if v49 == nil {
 			out.RawString("null")
 		} else {
-			(*v52).MarshalEasyJSON(out)
+			(*v49).MarshalEasyJSON(out)
 		}
 	}
 	out.RawByte(']')
@@ -3345,14 +3318,14 @@ func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_Guild(out *jwriter
 	first = false
 	out.RawString("\"voice_states\":")
 	out.RawByte('[')
-	for v53, v54 := range in.VoiceStates {
-		if v53 > 0 {
+	for v50, v51 := range in.VoiceStates {
+		if v50 > 0 {
 			out.RawByte(',')
 		}
-		if v54 == nil {
+		if v51 == nil {
 			out.RawString("null")
 		} else {
-			(*v54).MarshalEasyJSON(out)
+			(*v51).MarshalEasyJSON(out)
 		}
 	}
 	out.RawByte(']')
@@ -3411,9 +3384,9 @@ func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Emoji(in *jlexer.L
 				out.Roles = nil
 			}
 			for !in.IsDelim(']') {
-				var v55 string
-				v55 = string(in.String())
-				out.Roles = append(out.Roles, v55)
+				var v52 string
+				v52 = string(in.String())
+				out.Roles = append(out.Roles, v52)
 				in.WantComma()
 			}
 			in.Delim(']')
@@ -3450,11 +3423,11 @@ func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_Emoji(out *jwriter
 	first = false
 	out.RawString("\"roles\":")
 	out.RawByte('[')
-	for v56, v57 := range in.Roles {
-		if v56 > 0 {
+	for v53, v54 := range in.Roles {
+		if v53 > 0 {
 			out.RawByte(',')
 		}
-		out.String(string(v57))
+		out.String(string(v54))
 	}
 	out.RawByte(']')
 	if !first {
@@ -3612,15 +3585,15 @@ func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Channel(in *jlexer
 				out.PermissionOverwrites = nil
 			}
 			for !in.IsDelim(']') {
-				var v58 *PermissionOverwrite
+				var v55 *PermissionOverwrite
 				if in.IsNull() {
 					in.Skip()
-					v58 = nil
+					v55 = nil
 				} else {
-					v58 = new(PermissionOverwrite)
-					(*v58).UnmarshalEasyJSON(in)
+					v55 = new(PermissionOverwrite)
+					(*v55).UnmarshalEasyJSON(in)
 				}
-				out.PermissionOverwrites = append(out.PermissionOverwrites, v58)
+				out.PermissionOverwrites = append(out.PermissionOverwrites, v55)
 				in.WantComma()
 			}
 			in.Delim(']')
@@ -3705,14 +3678,14 @@ func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_Channel(out *jwrit
 	first = false
 	out.RawString("\"permission_overwrites\":")
 	out.RawByte('[')
-	for v59, v60 := range in.PermissionOverwrites {
-		if v59 > 0 {
+	for v56, v57 := range in.PermissionOverwrites {
+		if v56 > 0 {
 			out.RawByte(',')
 		}
-		if v60 == nil {
+		if v57 == nil {
 			out.RawString("null")
 		} else {
-			(*v60).MarshalEasyJSON(out)
+			(*v57).MarshalEasyJSON(out)
 		}
 	}
 	out.RawByte(']')
@@ -3989,15 +3962,15 @@ func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_VoiceICE(in *jlexe
 				out.Servers = nil
 			}
 			for !in.IsDelim(']') {
-				var v61 *ICEServer
+				var v58 *ICEServer
 				if in.IsNull() {
 					in.Skip()
-					v61 = nil
+					v58 = nil
 				} else {
-					v61 = new(ICEServer)
-					(*v61).UnmarshalEasyJSON(in)
+					v58 = new(ICEServer)
+					(*v58).UnmarshalEasyJSON(in)
 				}
-				out.Servers = append(out.Servers, v61)
+				out.Servers = append(out.Servers, v58)
 				in.WantComma()
 			}
 			in.Delim(']')
@@ -4024,14 +3997,14 @@ func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_VoiceICE(out *jwri
 	first = false
 	out.RawString("\"servers\":")
 	out.RawByte('[')
-	for v62, v63 := range in.Servers {
-		if v62 > 0 {
+	for v59, v60 := range in.Servers {
+		if v59 > 0 {
 			out.RawByte(',')
 		}
-		if v63 == nil {
+		if v60 == nil {
 			out.RawString("null")
 		} else {
-			(*v63).MarshalEasyJSON(out)
+			(*v60).MarshalEasyJSON(out)
 		}
 	}
 	out.RawByte(']')

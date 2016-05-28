@@ -15,7 +15,6 @@ func TestGatewayReadsGood(t *testing.T) {
 		assert.Equal(t, r.URL.Path, "/gateway")
 		fmt.Fprintln(w, `{"url":"wss://gateway.discord.gg"}`)
 	}))
-	defer ts.Close()
 
 	gw, err := HTTPGatewayRetriever{
 		Client:  http.DefaultClient,
@@ -24,13 +23,13 @@ func TestGatewayReadsGood(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, gw, "wss://gateway.discord.gg")
+	ts.Close()
 }
 
 func TestGatewayErrorsOnBadPacket(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, `{"url":"wss://ga`)
 	}))
-	defer ts.Close()
 
 	_, err := HTTPGatewayRetriever{
 		Client:  http.DefaultClient,
@@ -38,12 +37,12 @@ func TestGatewayErrorsOnBadPacket(t *testing.T) {
 	}.Gateway()
 
 	assert.NotNil(t, err)
+	ts.Close()
 }
 func TestGatewayPropogateHTTPError(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, `{"url":"wss://gateway.discord.gg"}`)
 	}))
-	defer ts.Close()
 
 	_, err := HTTPGatewayRetriever{
 		Client:  &http.Client{Timeout: time.Nanosecond},
@@ -51,4 +50,5 @@ func TestGatewayPropogateHTTPError(t *testing.T) {
 	}.Gateway()
 
 	assert.NotNil(t, err)
+	ts.Close()
 }

@@ -3,9 +3,8 @@ package cord
 import "sync"
 
 type queuedMessage struct {
+	data   *Payload
 	result chan error
-	op     Operation
-	b      []byte
 }
 
 type queue struct {
@@ -28,18 +27,11 @@ func (q *queue) Push(msg *queuedMessage) {
 	q.mu.L.Lock()
 	defer q.mu.L.Unlock()
 
-	if msg.op.IsHandshake() {
-		if len(q.items) > 0 && q.items[0].op.IsHandshake() {
-			q.items[0] = msg
-		} else {
-			q.items = append([]*queuedMessage{msg}, q.items...)
-		}
-	}
-
 	for _, fork := range q.forks {
 		fork.Push(msg)
 	}
 
+	q.items = append(q.items, msg)
 	q.mu.Broadcast()
 }
 
@@ -67,7 +59,9 @@ func (q *queue) Poll() <-chan *queuedMessage {
 			q.mu.Wait()
 		}
 
-		ch <- q.items[0]
+		head := q.items[0]
+		q.items = q.items[1:]
+		ch <- head
 	}()
 
 	return ch

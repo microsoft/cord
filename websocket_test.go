@@ -165,8 +165,6 @@ func (w *WebsocketSuite) TestReadsGzippedData() {
 		c.WriteMessage(websocket.BinaryMessage, b.Bytes())
 	}
 
-	go w.panicOnError()
-
 	done := make(chan struct{})
 	w.socket.Once(events.Ready(func(r *model.Ready) {
 		w.Equal("asdf", r.SessionID)

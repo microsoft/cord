@@ -5,6 +5,7 @@ import (
 	"compress/zlib"
 	"net/http"
 	"net/http/httptest"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -49,9 +50,6 @@ func (w *WebsocketSuite) SetupTest() {
 	w.onConnect = make(chan func(c *websocket.Conn), 16)
 	w.socket = New("tooken", &WsOptions{
 		Gateway: testGatewayRetriever{strings.Replace(w.ts.URL, "http://", "ws://", 1)},
-		Handshake: &model.Handshake{
-			Properties: model.HandshakeProperties{OS: "darwin"},
-		},
 	}).(*Websocket)
 }
 
@@ -76,8 +74,8 @@ func (w *WebsocketSuite) TestHandshakesAndReconnectsCorrectly() {
 	w.onConnect <- func(c *websocket.Conn) {
 		_, msg, err := c.ReadMessage()
 		w.Nil(err)
-		w.Equal(`{"op":2,"d":{"token":"tooken","properties":{"$os":"darwin",`+
-			`"$browser":"Cord 1.0","$device":"","$referer":"",`+
+		w.Equal(`{"op":2,"d":{"token":"tooken","properties":{"$os":"`+
+			runtime.GOOS+`","$browser":"Cord 1.0","$device":"","$referer":"",`+
 			`"$referring_domain":""},"compress":true,"large_threshold":0},`+
 			`"s":0,"t":""}`, string(msg))
 		c.WriteMessage(websocket.TextMessage, readyPacket)

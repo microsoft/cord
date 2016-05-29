@@ -15,14 +15,14 @@ type Debugger interface {
 	Error(error)
 }
 
-// NilDebugger is the default debugger with noops.
-type NilDebugger struct{}
+// nilDebugger is the default debugger with noops.
+type nilDebugger struct{}
 
 // Incoming implements Debugger.Incoming
-func (n NilDebugger) Incoming(b []byte) {}
+func (n nilDebugger) Incoming(b []byte) {}
 
 // Outgoing implements Debugger.Outgoing
-func (n NilDebugger) Outgoing(b []byte) {}
+func (n nilDebugger) Outgoing(b []byte) {}
 
 // Error implements Debugger.Error
-func (n NilDebugger) Error(e error) {}
+func (n nilDebugger) Error(e error) {}

@@ -19,6 +19,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// WsOptions is passed to New() to configure the websocket setup.
 type WsOptions struct {
 	// Handshake packet to send to the server. Note that `compress` and
 	// `properties` will be filled for you.
@@ -80,7 +81,7 @@ func (w *WsOptions) fillDefaults(token string) {
 	}
 
 	if w.Debugger == nil {
-		w.Debugger = NilDebugger{}
+		w.Debugger = nilDebugger{}
 	}
 
 	w.Handshake.Compress = true
@@ -244,10 +245,10 @@ func (w *Websocket) invokeWithResponse(ws *websocket.Conn, op Operation, data js
 // runHandshakeResume attempts to continue a previously disconnected session
 // on the websocket. It calls back to runHandshakeNew if the session is
 // deemed invalid.
-func (w *Websocket) runHandshakeResume(ws *websocket.Conn, sessionId string) (*Payload, error) {
+func (w *Websocket) runHandshakeResume(ws *websocket.Conn, sessionID string) (*Payload, error) {
 	payload, err := w.invokeWithResponse(ws, Resume, &model.Resume{
 		Token:     w.opts.Handshake.Token,
-		SessionID: sessionId,
+		SessionID: sessionID,
 		Sequence:  atomic.LoadUint64(&w.lastSeq),
 	})
 	if err != nil {
@@ -300,7 +301,7 @@ func (w *Websocket) runHandshake(ws *websocket.Conn) (*model.Ready, error) {
 	}
 
 	if payload.Event != "READY" {
-		return nil, fmt.Errorf("cord/websocket: expected to get READY event, got %s", payload)
+		return nil, fmt.Errorf("cord/websocket: expected to get READY event, got %+v", payload)
 	}
 
 	err = events.Ready(func(r *model.Ready) { ready = r }).Invoke(payload.Data)

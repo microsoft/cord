@@ -22,30 +22,25 @@ type gatewayResponse struct {
 type Operation uint8
 
 const (
-	// dispatches an event
+	// Dispatch is an operation used to dispatch  an event
 	Dispatch Operation = iota
-	// used for ping checking
+	// Heartbeat is an operation used for ping checking
 	Heartbeat
-	// used for client handshake
+	// Identify is an operation used for client handshake
 	Identify
-	// used to update the client status
+	// StatusUpdate is an operation used to update the client status
 	StatusUpdate
-	// used to join/move/leave voice channels
+	// VoiceStatusUpdate is an operation used to join/move/leave voice channels
 	VoiceStatusUpdate
-	// used for voice ping checking
+	// VoiceServerPing is an operation used for voice ping checking
 	VoiceServerPing
-	// used to resume a closed connection
+	// Resume is an operation used to resume a closed connection
 	Resume
-	// used to redirect clients to a new gateway
+	// Reconnect is an operation used to redirect clients to a new gateway
 	Reconnect
-	// used to request guild members
+	// RequestMembers is an operation used to request guild members
 	RequestMembers
-	// used to notify client they have an invalid session id
+	// InvalidSession is an operation used to notify
+	// client they have an invalid session id
 	InvalidSession
 )
-
-// IsHandshake returns true if the packet is a unique handshake packet to
-// initialize a connection.
-func (o Operation) IsHandshake() bool {
-	return o == Identify || o == Resume
-}

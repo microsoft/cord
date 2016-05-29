@@ -124,6 +124,24 @@ func (w *wsConn) Fork() *wsConn {
 	return &wsConn{queue: w.queue.Fork()}
 }
 
+// A DisruptionError is sent when an error happens which causes the server
+// to try to reconnect to the websocket.
+type DisruptionError struct{ Cause error }
+
+// Error implements error.Error
+func (d DisruptionError) Error() string {
+	return fmt.Sprintf("cord/websocket: reconnecting due to: %s", d.Cause)
+}
+
+// A FatalError is sent when an error happens that the websocket cannot
+// recover from.
+type FatalError struct{ Cause error }
+
+// Error implements error.Error
+func (d FatalError) Error() string {
+	return fmt.Sprintf("cord/websocket: fatal error: %s", d.Cause)
+}
+
 // Websocket is an implementation of the Socket interface.
 type Websocket struct {
 	opts   *WsOptions
@@ -140,7 +158,8 @@ type Websocket struct {
 func (w *Websocket) start() { go w.restart(nil, nil) }
 
 // restart closes the server and attempts to reconnect to Discord. It takes
-// an optional error to log down.
+// an optional error to log down. If the error is of type FatalError, restart
+// will exit after sending it without attempting to reconnect.
 func (w *Websocket) restart(err error, prev *wsConn) {
 	next := prev.Fork()
 
@@ -150,8 +169,11 @@ func (w *Websocket) restart(err error, prev *wsConn) {
 	}
 	prev.Close()
 
-	if err != nil {
+	if _, isFatal := err.(FatalError); isFatal {
 		w.sendErr(err)
+		return
+	} else if err != nil {
+		w.sendErr(DisruptionError{err})
 	}
 
 	// Look up the websocket address to connect to.
@@ -198,27 +220,12 @@ func (w *Websocket) establishSocketConnection(gateway string, cnx *wsConn) {
 	go w.writePump(next, interval)
 }
 
-// sendHandshake dispatches either an Identify or Resume packet on the
-// connection, depending whether we were connected before.
-func (w *Websocket) runHandshake(ws *websocket.Conn) (*model.Ready, error) {
-	var (
-		sid   = (*string)(atomic.LoadPointer(&w.sessionID))
-		data  *Payload
-		err   error
-		ready *model.Ready
-	)
-
-	if sid == nil {
-		data, err = w.marshalPayload(Identify, w.opts.Handshake)
-	} else {
-		data, err = w.marshalPayload(Resume, &model.Resume{
-			Token:     w.opts.Handshake.Token,
-			SessionID: *sid,
-			Sequence:  atomic.LoadUint64(&w.lastSeq),
-		})
-	}
+// invokeWithResponse attempts to write the operation to the websocket and
+// immediately read a result back with a timeout.
+func (w *Websocket) invokeWithResponse(ws *websocket.Conn, op Operation, data json.Marshaler) (*Payload, error) {
+	data, err := w.marshalPayload(op, data)
 	if err != nil {
-		return nil, err
+		return nil, FatalError{err}
 	}
 
 	if err = w.writeMessage(ws, data); err != nil {
@@ -231,10 +238,67 @@ func (w *Websocket) runHandshake(ws *websocket.Conn) (*model.Ready, error) {
 		return nil, err
 	}
 
-	payload, err := w.unmarshalPayload(message)
+	return w.unmarshalPayload(message)
+}
+
+// runHandshakeResume attempts to continue a previously disconnected session
+// on the websocket. It calls back to runHandshakeNew if the session is
+// deemed invalid.
+func (w *Websocket) runHandshakeResume(ws *websocket.Conn, sessionId string) (*Payload, error) {
+	payload, err := w.invokeWithResponse(ws, Resume, &model.Resume{
+		Token:     w.opts.Handshake.Token,
+		SessionID: sessionId,
+		Sequence:  atomic.LoadUint64(&w.lastSeq),
+	})
 	if err != nil {
 		return nil, err
 	}
+
+	switch payload.Operation {
+	case Dispatch:
+		return payload, nil
+	case InvalidSession:
+		return w.runHandshakeNew(ws)
+	default:
+		return nil, fmt.Errorf("cord/websocket: expected to get opcode %d or %d, %d",
+			Dispatch,
+			InvalidSession,
+			payload.Operation,
+		)
+	}
+}
+
+// runHandshakeNew attempts to authenticate a new session on the websocket.
+func (w *Websocket) runHandshakeNew(ws *websocket.Conn) (*Payload, error) {
+	payload, err := w.invokeWithResponse(ws, Identify, w.opts.Handshake)
+
+	// If the token the user provided is invalid, die, we can't do anything.
+	if wserr, ok := err.(*websocket.CloseError); ok && wserr.Code == 4004 {
+		return nil, FatalError{err}
+	}
+
+	return payload, err
+}
+
+// sendHandshake dispatches either an Identify or Resume packet on the
+// connection, depending whether we were connected before.
+func (w *Websocket) runHandshake(ws *websocket.Conn) (*model.Ready, error) {
+	var (
+		sid     = (*string)(atomic.LoadPointer(&w.sessionID))
+		payload *Payload
+		err     error
+		ready   *model.Ready
+	)
+
+	if sid == nil {
+		payload, err = w.runHandshakeNew(ws)
+	} else {
+		payload, err = w.runHandshakeResume(ws, *sid)
+	}
+	if err != nil {
+		return nil, err
+	}
+
 	if payload.Event != "READY" {
 		return nil, fmt.Errorf("cord/websocket: expected to get READY event, got %s", payload)
 	}
@@ -304,16 +368,6 @@ func (w *Websocket) writePump(cnx *wsConn, heartbeat time.Duration) {
 			return
 		}
 	}
-}
-
-// inflate decompresses the provided zlib-compressed bytes
-func inflate(b []byte) ([]byte, error) {
-	r, err := zlib.NewReader(bytes.NewReader(b))
-	if err != nil {
-		return nil, err
-	}
-
-	return ioutil.ReadAll(r)
 }
 
 // unmarshalPayload parses and extracts the payload from the byte slice.
@@ -412,4 +466,14 @@ func (w *Websocket) Close() error {
 	}
 
 	return cnx.Close()
+}
+
+// inflate decompresses the provided zlib-compressed bytes
+func inflate(b []byte) ([]byte, error) {
+	r, err := zlib.NewReader(bytes.NewReader(b))
+	if err != nil {
+		return nil, err
+	}
+
+	return ioutil.ReadAll(r)
 }

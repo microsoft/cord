@@ -97,7 +97,55 @@ func (w *WebsocketSuite) TestHandshakesAndReconnectsCorrectly() {
 	w.socket.Once(events.Ready(func(r *model.Ready) {
 		w.Equal("asdf", r.SessionID)
 		// closing the underlying connection will result in an EOF error
-		<-w.socket.Errs()
+		w.IsType(DisruptionError{}, <-w.socket.Errs())
+
+		w.socket.Once(events.Ready(func(r *model.Ready) {
+			close(done)
+		}))
+	}))
+
+	<-done
+}
+
+func (w *WebsocketSuite) TestLogsInvalidTokenAsFatalError() {
+	w.onConnect <- func(c *websocket.Conn) {
+		c.ReadMessage()
+		c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(4004, "Authentication"))
+		c.Close()
+	}
+
+	w.IsType(FatalError{}, <-w.socket.Errs())
+}
+
+func (w *WebsocketSuite) TestRetriesTokenOnInvalidSession() {
+	w.onConnect <- func(c *websocket.Conn) {
+		// initially it'll send the token
+		_, msg, err := c.ReadMessage()
+		w.Nil(err)
+		w.Contains(string(msg), `"op":2`)
+		c.WriteMessage(websocket.TextMessage, readyPacket)
+		c.Close()
+	}
+
+	w.onConnect <- func(c *websocket.Conn) {
+		// when we restart we won't respond with a ready and close the socket
+		// like Discord does.
+		_, msg, err := c.ReadMessage()
+		w.Contains(string(msg), `"op":6`)
+		w.Nil(err)
+		c.WriteMessage(websocket.TextMessage, []byte(`{"op":9}`))
+
+		_, msg, err = c.ReadMessage()
+		w.Nil(err)
+		w.Contains(string(msg), `"op":2`)
+		c.WriteMessage(websocket.TextMessage, readyPacket)
+
+		c.Close()
+	}
+
+	done := make(chan struct{})
+	w.socket.Once(events.Ready(func(r *model.Ready) {
+		w.IsType(DisruptionError{}, <-w.socket.Errs())
 
 		w.socket.Once(events.Ready(func(r *model.Ready) {
 			close(done)

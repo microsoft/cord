@@ -175,6 +175,7 @@ func (w *Websocket) restart(err error, prev *wsConn) {
 		return
 	} else if err != nil {
 		w.sendErr(DisruptionError{err})
+		time.Sleep(w.opts.Backoff.NextBackOff())
 	}
 
 	// Look up the websocket address to connect to.
@@ -184,21 +185,23 @@ func (w *Websocket) restart(err error, prev *wsConn) {
 		return
 	}
 
-	// Wait for a short while then reestablished the connection. Note that
-	// the atomic playing we do with the *wsConn establishes a thread-safety
-	// around the backoff interface.
-	time.Sleep(w.opts.Backoff.NextBackOff())
 	w.establishSocketConnection(gateway, next)
 }
 
+type sessionDetails struct {
+	SessionID string
+	Heartbeat uint
+}
+
 func (w *Websocket) establishSocketConnection(gateway string, cnx *wsConn) {
+	w.opts.Debugger.Connecting(gateway)
 	ws, _, err := w.opts.Dialer.Dial(gateway, w.opts.Header)
 	if err != nil {
 		w.restart(err, cnx)
 		return
 	}
 
-	ready, err := w.runHandshake(ws)
+	details, err := w.runHandshake(ws)
 	if err != nil {
 		w.restart(err, cnx)
 		return
@@ -214,8 +217,8 @@ func (w *Websocket) establishSocketConnection(gateway string, cnx *wsConn) {
 	atomic.StorePointer(&w.ws, unsafe.Pointer(unsafe.Pointer(next)))
 	w.opts.Backoff.Reset()
 
-	atomic.StorePointer(&w.sessionID, unsafe.Pointer(&ready.SessionID))
-	interval := time.Duration(ready.HeartbeatInterval) * time.Millisecond
+	atomic.StorePointer(&w.sessionID, unsafe.Pointer(&details.SessionID))
+	interval := time.Duration(details.Heartbeat) * time.Millisecond
 
 	go w.readPump(next)
 	go w.writePump(next, interval)
@@ -245,23 +248,34 @@ func (w *Websocket) invokeWithResponse(ws *websocket.Conn, op Operation, data js
 // runHandshakeResume attempts to continue a previously disconnected session
 // on the websocket. It calls back to runHandshakeNew if the session is
 // deemed invalid.
-func (w *Websocket) runHandshakeResume(ws *websocket.Conn, sessionID string) (*Payload, error) {
+func (w *Websocket) runHandshakeResume(ws *websocket.Conn, sessionID string) (details sessionDetails, err error) {
 	payload, err := w.invokeWithResponse(ws, Resume, &model.Resume{
 		Token:     w.opts.Handshake.Token,
 		SessionID: sessionID,
 		Sequence:  atomic.LoadUint64(&w.lastSeq),
 	})
 	if err != nil {
-		return nil, err
+		return details, err
 	}
 
 	switch payload.Operation {
 	case Dispatch:
-		return payload, nil
+		if payload.Event != events.ResumedStr {
+			return details, fmt.Errorf("cord/websocket: expected to get %s event, got %+v",
+				events.ResumedStr, payload)
+		}
+
+		err = events.Resumed(func(r *model.Resumed) {
+			details.Heartbeat = r.HeartbeatInterval
+			details.SessionID = sessionID
+		}).Invoke(payload.Data)
+		go w.events.Dispatch(payload.Event, payload.Data)
+		return details, nil
+
 	case InvalidSession:
 		return w.runHandshakeNew(ws)
 	default:
-		return nil, fmt.Errorf("cord/websocket: expected to get opcode %d or %d, %d",
+		return details, fmt.Errorf("cord/websocket: expected to get opcode %d or %d, %d",
 			Dispatch,
 			InvalidSession,
 			payload.Operation,
@@ -270,44 +284,38 @@ func (w *Websocket) runHandshakeResume(ws *websocket.Conn, sessionID string) (*P
 }
 
 // runHandshakeNew attempts to authenticate a new session on the websocket.
-func (w *Websocket) runHandshakeNew(ws *websocket.Conn) (*Payload, error) {
+func (w *Websocket) runHandshakeNew(ws *websocket.Conn) (details sessionDetails, err error) {
 	payload, err := w.invokeWithResponse(ws, Identify, w.opts.Handshake)
 
 	// If the token the user provided is invalid, die, we can't do anything.
 	if wserr, ok := err.(*websocket.CloseError); ok && wserr.Code == 4004 {
-		return nil, FatalError{err}
+		return details, FatalError{err}
 	}
 
-	return payload, err
+	if payload.Event != events.ReadyStr {
+		return details, fmt.Errorf("cord/websocket: expected to get %s event, got %+v",
+			events.ReadyStr, payload)
+	}
+
+	err = events.Ready(func(r *model.Ready) {
+		details.Heartbeat = r.HeartbeatInterval
+		details.SessionID = r.SessionID
+	}).Invoke(payload.Data)
+	go w.events.Dispatch(payload.Event, payload.Data)
+
+	return details, err
 }
 
 // sendHandshake dispatches either an Identify or Resume packet on the
 // connection, depending whether we were connected before.
-func (w *Websocket) runHandshake(ws *websocket.Conn) (*model.Ready, error) {
-	var (
-		sid     = (*string)(atomic.LoadPointer(&w.sessionID))
-		payload *Payload
-		err     error
-		ready   *model.Ready
-	)
+func (w *Websocket) runHandshake(ws *websocket.Conn) (sessionDetails, error) {
+	sid := (*string)(atomic.LoadPointer(&w.sessionID))
 
 	if sid == nil {
-		payload, err = w.runHandshakeNew(ws)
+		return w.runHandshakeNew(ws)
 	} else {
-		payload, err = w.runHandshakeResume(ws, *sid)
+		return w.runHandshakeResume(ws, *sid)
 	}
-	if err != nil {
-		return nil, err
-	}
-
-	if payload.Event != "READY" {
-		return nil, fmt.Errorf("cord/websocket: expected to get READY event, got %+v", payload)
-	}
-
-	err = events.Ready(func(r *model.Ready) { ready = r }).Invoke(payload.Data)
-	go w.events.Dispatch(payload.Event, payload.Data)
-
-	return ready, err
 }
 
 // readPump reads off messages from the socket and dispatches them into the
@@ -360,6 +368,7 @@ func (w *Websocket) writePump(cnx *wsConn, heartbeat time.Duration) {
 			if !ok {
 				return
 			}
+
 			err = w.writeMessage(cnx.ws, msg.data)
 			msg.result <- err
 		}

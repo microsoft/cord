@@ -44,6 +44,7 @@ events:
 		PRESENCE_UPDATE=PresenceUpdate \
 		PRESENCES_REPLACE=PresencesReplace \
 		READY=Ready \
+		RESUMED=Resumed \
 		USER_UPDATE=User \
 		USER_SETTINGS_UPDATE=UserSettingsUpdate \
 		USER_GUILD_SETTINGS_UPDATE=UserGuildSettings \

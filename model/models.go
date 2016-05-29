@@ -374,6 +374,11 @@ type Resume struct {
 	Sequence  uint64 `json:"seq"`
 }
 
+// Resumed is received after a successful Resume packet is sent.
+type Resumed struct {
+	HeartbeatInterval uint `json:"heartbeat_interval"`
+}
+
 // Handshake is sent initially on the first connection to the server.
 type Handshake struct {
 	Token          string              `json:"token"`
@@ -382,6 +387,8 @@ type Handshake struct {
 	LargeThreshold int                 `json:"large_threshold"`
 }
 
+// HandhsakeProperties are contained within the handshake and describe the
+// device conntecting to Discord's server.
 type HandshakeProperties struct {
 	OS              string `json:"$os"`
 	Browser         string `json:"$browser"`

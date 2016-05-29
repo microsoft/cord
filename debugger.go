@@ -10,6 +10,9 @@ type Debugger interface {
 	// Outgoing is called with data when a packet is sent on cord.
 	Outgoing(b []byte)
 
+	// Called when the websocket tries to connect to a server.
+	Connecting(endpoint string)
+
 	// Error is called when an error occurs on the socket. The error
 	// is ALSO sent down the Errs() channel for your
 	Error(error)
@@ -23,6 +26,9 @@ func (n nilDebugger) Incoming(b []byte) {}
 
 // Outgoing implements Debugger.Outgoing
 func (n nilDebugger) Outgoing(b []byte) {}
+
+// Connecting implements Debugger.Connecting
+func (n nilDebugger) Connecting(endpoint string) {}
 
 // Error implements Debugger.Error
 func (n nilDebugger) Error(e error) {}

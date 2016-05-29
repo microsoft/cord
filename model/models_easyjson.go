@@ -171,6 +171,58 @@ func (v *Handshake) UnmarshalJSON(data []byte) error {
 func (v *Handshake) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Handshake(l, v)
 }
+func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Resumed(in *jlexer.Lexer, out *Resumed) {
+	if in.IsNull() {
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "heartbeat_interval":
+			out.HeartbeatInterval = uint(in.Uint())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+}
+func easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_Resumed(out *jwriter.Writer, in Resumed) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	if !first {
+		out.RawByte(',')
+	}
+	first = false
+	out.RawString("\"heartbeat_interval\":")
+	out.Uint(uint(in.HeartbeatInterval))
+	out.RawByte('}')
+}
+func (v Resumed) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_Resumed(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+func (v Resumed) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson_d2b7633e_encode_github_com_WatchBeam_cord_model_Resumed(w, v)
+}
+func (v *Resumed) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Resumed(&r, v)
+	return r.Error()
+}
+func (v *Resumed) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Resumed(l, v)
+}
 func easyjson_d2b7633e_decode_github_com_WatchBeam_cord_model_Resume(in *jlexer.Lexer, out *Resume) {
 	if in.IsNull() {
 		in.Skip()

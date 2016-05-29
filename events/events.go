@@ -3,536 +3,585 @@ package events
 
 import "github.com/WatchBeam/cord/model"
 
+var (
+	ChannelCreateStr           = "CHANNEL_CREATE"
+	ChannelUpdateStr           = "CHANNEL_UPDATE"
+	ChannelDeleteStr           = "CHANNEL_DELETE"
+	GuildCreateStr             = "GUILD_CREATE"
+	GuildUpdateStr             = "GUILD_UPDATE"
+	GuildDeleteStr             = "GUILD_DELETE"
+	GuildBanAddStr             = "GUILD_BAN_ADD"
+	GuildMemberAddStr          = "GUILD_MEMBER_ADD"
+	GuildMemberUpdateStr       = "GUILD_MEMBER_UPDATE"
+	GuildMemberRemoveStr       = "GUILD_MEMBER_REMOVE"
+	GuildRoleCreateStr         = "GUILD_ROLE_CREATE"
+	GuildRoleUpdateStr         = "GUILD_ROLE_UPDATE"
+	GuildRoleDeleteStr         = "GUILD_ROLE_DELETE"
+	GuildIntegrationsUpdateStr = "GUILD_INTEGRATIONS_UPDATE"
+	GuildEmojisUpdateStr       = "GUILD_EMOJIS_UPDATE"
+	MessageAckStr              = "MESSAGE_ACK"
+	MessageCreateStr           = "MESSAGE_CREATE"
+	MessageUpdateStr           = "MESSAGE_UPDATE"
+	MessageDeleteStr           = "MESSAGE_DELETE"
+	PresenceUpdateStr          = "PRESENCE_UPDATE"
+	PresencesReplaceStr        = "PRESENCES_REPLACE"
+	ReadyStr                   = "READY"
+	ResumedStr                 = "RESUMED"
+	UserUpdateStr              = "USER_UPDATE"
+	UserSettingsUpdateStr      = "USER_SETTINGS_UPDATE"
+	UserGuildSettingsUpdateStr = "USER_GUILD_SETTINGS_UPDATE"
+	TypingStartStr             = "TYPING_START"
+	VoiceServerUpdateStr       = "VOICE_SERVER_UPDATE"
+	VoiceStateUpdateStr        = "VOICE_STATE_UPDATE"
+)
 
 // ChannelCreate is a handler for CHANNEL_CREATE events.
 type ChannelCreate func(update *model.Channel)
 
-var _ Handler = ChannelCreate(func (m *model.Channel) {})
+var _ Handler = ChannelCreate(func(m *model.Channel) {})
 
 // Name implements Handler.Name
-func (p ChannelCreate) Name() string { return "CHANNEL_CREATE" }
+func (p ChannelCreate) Name() string { return ChannelCreateStr }
 
 // Invoke implements Handler.Invoke
 func (p ChannelCreate) Invoke(b []byte) error {
-    data := &model.Channel{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.Channel{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // ChannelUpdate is a handler for CHANNEL_UPDATE events.
 type ChannelUpdate func(update *model.Channel)
 
-var _ Handler = ChannelUpdate(func (m *model.Channel) {})
+var _ Handler = ChannelUpdate(func(m *model.Channel) {})
 
 // Name implements Handler.Name
-func (p ChannelUpdate) Name() string { return "CHANNEL_UPDATE" }
+func (p ChannelUpdate) Name() string { return ChannelUpdateStr }
 
 // Invoke implements Handler.Invoke
 func (p ChannelUpdate) Invoke(b []byte) error {
-    data := &model.Channel{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.Channel{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // ChannelDelete is a handler for CHANNEL_DELETE events.
 type ChannelDelete func(update *model.Channel)
 
-var _ Handler = ChannelDelete(func (m *model.Channel) {})
+var _ Handler = ChannelDelete(func(m *model.Channel) {})
 
 // Name implements Handler.Name
-func (p ChannelDelete) Name() string { return "CHANNEL_DELETE" }
+func (p ChannelDelete) Name() string { return ChannelDeleteStr }
 
 // Invoke implements Handler.Invoke
 func (p ChannelDelete) Invoke(b []byte) error {
-    data := &model.Channel{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.Channel{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // GuildCreate is a handler for GUILD_CREATE events.
 type GuildCreate func(update *model.Guild)
 
-var _ Handler = GuildCreate(func (m *model.Guild) {})
+var _ Handler = GuildCreate(func(m *model.Guild) {})
 
 // Name implements Handler.Name
-func (p GuildCreate) Name() string { return "GUILD_CREATE" }
+func (p GuildCreate) Name() string { return GuildCreateStr }
 
 // Invoke implements Handler.Invoke
 func (p GuildCreate) Invoke(b []byte) error {
-    data := &model.Guild{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.Guild{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // GuildUpdate is a handler for GUILD_UPDATE events.
 type GuildUpdate func(update *model.Guild)
 
-var _ Handler = GuildUpdate(func (m *model.Guild) {})
+var _ Handler = GuildUpdate(func(m *model.Guild) {})
 
 // Name implements Handler.Name
-func (p GuildUpdate) Name() string { return "GUILD_UPDATE" }
+func (p GuildUpdate) Name() string { return GuildUpdateStr }
 
 // Invoke implements Handler.Invoke
 func (p GuildUpdate) Invoke(b []byte) error {
-    data := &model.Guild{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.Guild{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // GuildDelete is a handler for GUILD_DELETE events.
 type GuildDelete func(update *model.Guild)
 
-var _ Handler = GuildDelete(func (m *model.Guild) {})
+var _ Handler = GuildDelete(func(m *model.Guild) {})
 
 // Name implements Handler.Name
-func (p GuildDelete) Name() string { return "GUILD_DELETE" }
+func (p GuildDelete) Name() string { return GuildDeleteStr }
 
 // Invoke implements Handler.Invoke
 func (p GuildDelete) Invoke(b []byte) error {
-    data := &model.Guild{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.Guild{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // GuildBanAdd is a handler for GUILD_BAN_ADD events.
 type GuildBanAdd func(update *model.Guild)
 
-var _ Handler = GuildBanAdd(func (m *model.Guild) {})
+var _ Handler = GuildBanAdd(func(m *model.Guild) {})
 
 // Name implements Handler.Name
-func (p GuildBanAdd) Name() string { return "GUILD_BAN_ADD" }
+func (p GuildBanAdd) Name() string { return GuildBanAddStr }
 
 // Invoke implements Handler.Invoke
 func (p GuildBanAdd) Invoke(b []byte) error {
-    data := &model.Guild{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.Guild{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // GuildMemberAdd is a handler for GUILD_MEMBER_ADD events.
 type GuildMemberAdd func(update *model.Member)
 
-var _ Handler = GuildMemberAdd(func (m *model.Member) {})
+var _ Handler = GuildMemberAdd(func(m *model.Member) {})
 
 // Name implements Handler.Name
-func (p GuildMemberAdd) Name() string { return "GUILD_MEMBER_ADD" }
+func (p GuildMemberAdd) Name() string { return GuildMemberAddStr }
 
 // Invoke implements Handler.Invoke
 func (p GuildMemberAdd) Invoke(b []byte) error {
-    data := &model.Member{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.Member{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // GuildMemberUpdate is a handler for GUILD_MEMBER_UPDATE events.
 type GuildMemberUpdate func(update *model.Member)
 
-var _ Handler = GuildMemberUpdate(func (m *model.Member) {})
+var _ Handler = GuildMemberUpdate(func(m *model.Member) {})
 
 // Name implements Handler.Name
-func (p GuildMemberUpdate) Name() string { return "GUILD_MEMBER_UPDATE" }
+func (p GuildMemberUpdate) Name() string { return GuildMemberUpdateStr }
 
 // Invoke implements Handler.Invoke
 func (p GuildMemberUpdate) Invoke(b []byte) error {
-    data := &model.Member{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.Member{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // GuildMemberRemove is a handler for GUILD_MEMBER_REMOVE events.
 type GuildMemberRemove func(update *model.Member)
 
-var _ Handler = GuildMemberRemove(func (m *model.Member) {})
+var _ Handler = GuildMemberRemove(func(m *model.Member) {})
 
 // Name implements Handler.Name
-func (p GuildMemberRemove) Name() string { return "GUILD_MEMBER_REMOVE" }
+func (p GuildMemberRemove) Name() string { return GuildMemberRemoveStr }
 
 // Invoke implements Handler.Invoke
 func (p GuildMemberRemove) Invoke(b []byte) error {
-    data := &model.Member{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.Member{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // GuildRoleCreate is a handler for GUILD_ROLE_CREATE events.
 type GuildRoleCreate func(update *model.GuildRole)
 
-var _ Handler = GuildRoleCreate(func (m *model.GuildRole) {})
+var _ Handler = GuildRoleCreate(func(m *model.GuildRole) {})
 
 // Name implements Handler.Name
-func (p GuildRoleCreate) Name() string { return "GUILD_ROLE_CREATE" }
+func (p GuildRoleCreate) Name() string { return GuildRoleCreateStr }
 
 // Invoke implements Handler.Invoke
 func (p GuildRoleCreate) Invoke(b []byte) error {
-    data := &model.GuildRole{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.GuildRole{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // GuildRoleUpdate is a handler for GUILD_ROLE_UPDATE events.
 type GuildRoleUpdate func(update *model.GuildRole)
 
-var _ Handler = GuildRoleUpdate(func (m *model.GuildRole) {})
+var _ Handler = GuildRoleUpdate(func(m *model.GuildRole) {})
 
 // Name implements Handler.Name
-func (p GuildRoleUpdate) Name() string { return "GUILD_ROLE_UPDATE" }
+func (p GuildRoleUpdate) Name() string { return GuildRoleUpdateStr }
 
 // Invoke implements Handler.Invoke
 func (p GuildRoleUpdate) Invoke(b []byte) error {
-    data := &model.GuildRole{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.GuildRole{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // GuildRoleDelete is a handler for GUILD_ROLE_DELETE events.
 type GuildRoleDelete func(update *model.GuildRoleDelete)
 
-var _ Handler = GuildRoleDelete(func (m *model.GuildRoleDelete) {})
+var _ Handler = GuildRoleDelete(func(m *model.GuildRoleDelete) {})
 
 // Name implements Handler.Name
-func (p GuildRoleDelete) Name() string { return "GUILD_ROLE_DELETE" }
+func (p GuildRoleDelete) Name() string { return GuildRoleDeleteStr }
 
 // Invoke implements Handler.Invoke
 func (p GuildRoleDelete) Invoke(b []byte) error {
-    data := &model.GuildRoleDelete{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.GuildRoleDelete{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // GuildIntegrationsUpdate is a handler for GUILD_INTEGRATIONS_UPDATE events.
 type GuildIntegrationsUpdate func(update *model.GuildIntegrationsUpdate)
 
-var _ Handler = GuildIntegrationsUpdate(func (m *model.GuildIntegrationsUpdate) {})
+var _ Handler = GuildIntegrationsUpdate(func(m *model.GuildIntegrationsUpdate) {})
 
 // Name implements Handler.Name
-func (p GuildIntegrationsUpdate) Name() string { return "GUILD_INTEGRATIONS_UPDATE" }
+func (p GuildIntegrationsUpdate) Name() string { return GuildIntegrationsUpdateStr }
 
 // Invoke implements Handler.Invoke
 func (p GuildIntegrationsUpdate) Invoke(b []byte) error {
-    data := &model.GuildIntegrationsUpdate{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.GuildIntegrationsUpdate{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // GuildEmojisUpdate is a handler for GUILD_EMOJIS_UPDATE events.
 type GuildEmojisUpdate func(update *model.GuildEmojisUpdate)
 
-var _ Handler = GuildEmojisUpdate(func (m *model.GuildEmojisUpdate) {})
+var _ Handler = GuildEmojisUpdate(func(m *model.GuildEmojisUpdate) {})
 
 // Name implements Handler.Name
-func (p GuildEmojisUpdate) Name() string { return "GUILD_EMOJIS_UPDATE" }
+func (p GuildEmojisUpdate) Name() string { return GuildEmojisUpdateStr }
 
 // Invoke implements Handler.Invoke
 func (p GuildEmojisUpdate) Invoke(b []byte) error {
-    data := &model.GuildEmojisUpdate{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.GuildEmojisUpdate{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // MessageAck is a handler for MESSAGE_ACK events.
 type MessageAck func(update *model.MessageAck)
 
-var _ Handler = MessageAck(func (m *model.MessageAck) {})
+var _ Handler = MessageAck(func(m *model.MessageAck) {})
 
 // Name implements Handler.Name
-func (p MessageAck) Name() string { return "MESSAGE_ACK" }
+func (p MessageAck) Name() string { return MessageAckStr }
 
 // Invoke implements Handler.Invoke
 func (p MessageAck) Invoke(b []byte) error {
-    data := &model.MessageAck{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.MessageAck{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // MessageCreate is a handler for MESSAGE_CREATE events.
 type MessageCreate func(update *model.Message)
 
-var _ Handler = MessageCreate(func (m *model.Message) {})
+var _ Handler = MessageCreate(func(m *model.Message) {})
 
 // Name implements Handler.Name
-func (p MessageCreate) Name() string { return "MESSAGE_CREATE" }
+func (p MessageCreate) Name() string { return MessageCreateStr }
 
 // Invoke implements Handler.Invoke
 func (p MessageCreate) Invoke(b []byte) error {
-    data := &model.Message{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.Message{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // MessageUpdate is a handler for MESSAGE_UPDATE events.
 type MessageUpdate func(update *model.Message)
 
-var _ Handler = MessageUpdate(func (m *model.Message) {})
+var _ Handler = MessageUpdate(func(m *model.Message) {})
 
 // Name implements Handler.Name
-func (p MessageUpdate) Name() string { return "MESSAGE_UPDATE" }
+func (p MessageUpdate) Name() string { return MessageUpdateStr }
 
 // Invoke implements Handler.Invoke
 func (p MessageUpdate) Invoke(b []byte) error {
-    data := &model.Message{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.Message{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // MessageDelete is a handler for MESSAGE_DELETE events.
 type MessageDelete func(update *model.Message)
 
-var _ Handler = MessageDelete(func (m *model.Message) {})
+var _ Handler = MessageDelete(func(m *model.Message) {})
 
 // Name implements Handler.Name
-func (p MessageDelete) Name() string { return "MESSAGE_DELETE" }
+func (p MessageDelete) Name() string { return MessageDeleteStr }
 
 // Invoke implements Handler.Invoke
 func (p MessageDelete) Invoke(b []byte) error {
-    data := &model.Message{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.Message{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // PresenceUpdate is a handler for PRESENCE_UPDATE events.
 type PresenceUpdate func(update *model.PresenceUpdate)
 
-var _ Handler = PresenceUpdate(func (m *model.PresenceUpdate) {})
+var _ Handler = PresenceUpdate(func(m *model.PresenceUpdate) {})
 
 // Name implements Handler.Name
-func (p PresenceUpdate) Name() string { return "PRESENCE_UPDATE" }
+func (p PresenceUpdate) Name() string { return PresenceUpdateStr }
 
 // Invoke implements Handler.Invoke
 func (p PresenceUpdate) Invoke(b []byte) error {
-    data := &model.PresenceUpdate{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.PresenceUpdate{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // PresencesReplace is a handler for PRESENCES_REPLACE events.
 type PresencesReplace func(update *model.PresencesReplace)
 
-var _ Handler = PresencesReplace(func (m *model.PresencesReplace) {})
+var _ Handler = PresencesReplace(func(m *model.PresencesReplace) {})
 
 // Name implements Handler.Name
-func (p PresencesReplace) Name() string { return "PRESENCES_REPLACE" }
+func (p PresencesReplace) Name() string { return PresencesReplaceStr }
 
 // Invoke implements Handler.Invoke
 func (p PresencesReplace) Invoke(b []byte) error {
-    data := &model.PresencesReplace{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.PresencesReplace{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // Ready is a handler for READY events.
 type Ready func(update *model.Ready)
 
-var _ Handler = Ready(func (m *model.Ready) {})
+var _ Handler = Ready(func(m *model.Ready) {})
 
 // Name implements Handler.Name
-func (p Ready) Name() string { return "READY" }
+func (p Ready) Name() string { return ReadyStr }
 
 // Invoke implements Handler.Invoke
 func (p Ready) Invoke(b []byte) error {
-    data := &model.Ready{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.Ready{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
+}
+
+// Resumed is a handler for RESUMED events.
+type Resumed func(update *model.Resumed)
+
+var _ Handler = Resumed(func(m *model.Resumed) {})
+
+// Name implements Handler.Name
+func (p Resumed) Name() string { return ResumedStr }
+
+// Invoke implements Handler.Invoke
+func (p Resumed) Invoke(b []byte) error {
+	data := &model.Resumed{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
+
+	p(data)
+	return nil
 }
 
 // UserUpdate is a handler for USER_UPDATE events.
 type UserUpdate func(update *model.User)
 
-var _ Handler = UserUpdate(func (m *model.User) {})
+var _ Handler = UserUpdate(func(m *model.User) {})
 
 // Name implements Handler.Name
-func (p UserUpdate) Name() string { return "USER_UPDATE" }
+func (p UserUpdate) Name() string { return UserUpdateStr }
 
 // Invoke implements Handler.Invoke
 func (p UserUpdate) Invoke(b []byte) error {
-    data := &model.User{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.User{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // UserSettingsUpdate is a handler for USER_SETTINGS_UPDATE events.
 type UserSettingsUpdate func(update *model.UserSettingsUpdate)
 
-var _ Handler = UserSettingsUpdate(func (m *model.UserSettingsUpdate) {})
+var _ Handler = UserSettingsUpdate(func(m *model.UserSettingsUpdate) {})
 
 // Name implements Handler.Name
-func (p UserSettingsUpdate) Name() string { return "USER_SETTINGS_UPDATE" }
+func (p UserSettingsUpdate) Name() string { return UserSettingsUpdateStr }
 
 // Invoke implements Handler.Invoke
 func (p UserSettingsUpdate) Invoke(b []byte) error {
-    data := &model.UserSettingsUpdate{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.UserSettingsUpdate{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // UserGuildSettingsUpdate is a handler for USER_GUILD_SETTINGS_UPDATE events.
 type UserGuildSettingsUpdate func(update *model.UserGuildSettings)
 
-var _ Handler = UserGuildSettingsUpdate(func (m *model.UserGuildSettings) {})
+var _ Handler = UserGuildSettingsUpdate(func(m *model.UserGuildSettings) {})
 
 // Name implements Handler.Name
-func (p UserGuildSettingsUpdate) Name() string { return "USER_GUILD_SETTINGS_UPDATE" }
+func (p UserGuildSettingsUpdate) Name() string { return UserGuildSettingsUpdateStr }
 
 // Invoke implements Handler.Invoke
 func (p UserGuildSettingsUpdate) Invoke(b []byte) error {
-    data := &model.UserGuildSettings{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.UserGuildSettings{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // TypingStart is a handler for TYPING_START events.
 type TypingStart func(update *model.TypingStart)
 
-var _ Handler = TypingStart(func (m *model.TypingStart) {})
+var _ Handler = TypingStart(func(m *model.TypingStart) {})
 
 // Name implements Handler.Name
-func (p TypingStart) Name() string { return "TYPING_START" }
+func (p TypingStart) Name() string { return TypingStartStr }
 
 // Invoke implements Handler.Invoke
 func (p TypingStart) Invoke(b []byte) error {
-    data := &model.TypingStart{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.TypingStart{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // VoiceServerUpdate is a handler for VOICE_SERVER_UPDATE events.
 type VoiceServerUpdate func(update *model.VoiceServerUpdate)
 
-var _ Handler = VoiceServerUpdate(func (m *model.VoiceServerUpdate) {})
+var _ Handler = VoiceServerUpdate(func(m *model.VoiceServerUpdate) {})
 
 // Name implements Handler.Name
-func (p VoiceServerUpdate) Name() string { return "VOICE_SERVER_UPDATE" }
+func (p VoiceServerUpdate) Name() string { return VoiceServerUpdateStr }
 
 // Invoke implements Handler.Invoke
 func (p VoiceServerUpdate) Invoke(b []byte) error {
-    data := &model.VoiceServerUpdate{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.VoiceServerUpdate{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
 
 // VoiceStateUpdate is a handler for VOICE_STATE_UPDATE events.
 type VoiceStateUpdate func(update *model.VoiceState)
 
-var _ Handler = VoiceStateUpdate(func (m *model.VoiceState) {})
+var _ Handler = VoiceStateUpdate(func(m *model.VoiceState) {})
 
 // Name implements Handler.Name
-func (p VoiceStateUpdate) Name() string { return "VOICE_STATE_UPDATE" }
+func (p VoiceStateUpdate) Name() string { return VoiceStateUpdateStr }
 
 // Invoke implements Handler.Invoke
 func (p VoiceStateUpdate) Invoke(b []byte) error {
-    data := &model.VoiceState{}
-    if err := data.UnmarshalJSON(b); err != nil {
-        return err
-    }
+	data := &model.VoiceState{}
+	if err := data.UnmarshalJSON(b); err != nil {
+		return err
+	}
 
-    p(data)
-    return nil
+	p(data)
+	return nil
 }
-

@@ -22,6 +22,13 @@ var (
         "s": 1,
         "d": {"session_id": "asdf", "heartbeat_interval": 10000}
     }`)
+
+	resumedPacket = []byte(`{
+        "t":"RESUMED",
+        "s":3,
+        "op":0,
+        "d":{"heartbeat_interval":41250}
+    }`)
 )
 
 type WebsocketSuite struct {
@@ -87,7 +94,7 @@ func (w *WebsocketSuite) TestHandshakesAndReconnectsCorrectly() {
 		w.Nil(err)
 		w.Equal(`{"op":6,"d":{"token":"tooken","session_id":"asdf",`+
 			`"seq":0},"s":0,"t":""}`, string(msg))
-		c.WriteMessage(websocket.TextMessage, readyPacket)
+		c.WriteMessage(websocket.TextMessage, resumedPacket)
 		c.Close()
 	}
 
@@ -97,7 +104,7 @@ func (w *WebsocketSuite) TestHandshakesAndReconnectsCorrectly() {
 		// closing the underlying connection will result in an EOF error
 		w.IsType(DisruptionError{}, <-w.socket.Errs())
 
-		w.socket.Once(events.Ready(func(r *model.Ready) {
+		w.socket.Once(events.Resumed(func(r *model.Resumed) {
 			close(done)
 		}))
 	}))

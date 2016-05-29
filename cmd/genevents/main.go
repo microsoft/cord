@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"go/format"
 	"log"
 	"os"
 	"strings"
@@ -17,6 +19,12 @@ package events
 
 import "github.com/WatchBeam/cord/model"
 
+var (
+{{ range . }}
+	{{ .Struct }}Str = "{{ .Event }}"
+{{- end }}
+)
+
 {{ range . }}
 // {{ .Struct }} is a handler for {{ .Event }} events.
 type {{ .Struct }} func(update *model.{{ .Model }})
@@ -24,7 +32,7 @@ type {{ .Struct }} func(update *model.{{ .Model }})
 var _ Handler = {{ .Struct }}(func (m *model.{{ .Model }}) {})
 
 // Name implements Handler.Name
-func (p {{ .Struct }}) Name() string { return "{{ .Event }}" }
+func (p {{ .Struct }}) Name() string { return {{ .Struct }}Str }
 
 // Invoke implements Handler.Invoke
 func (p {{ .Struct }}) Invoke(b []byte) error {
@@ -36,7 +44,7 @@ func (p {{ .Struct }}) Invoke(b []byte) error {
     p(data)
     return nil
 }
-{{end}}
+{{ end }}
 `
 )
 
@@ -76,8 +84,15 @@ func main() {
 		})
 	}
 
+	var buf bytes.Buffer
 	t := template.Must(template.New("handlers").Parse(tmpl))
-	if err := t.Execute(os.Stdout, data); err != nil {
+	if err := t.Execute(&buf, data); err != nil {
 		log.Fatal(err)
 	}
+
+	p, err := format.Source(buf.Bytes())
+	if err != nil {
+		log.Fatal(err)
+	}
+	os.Stdout.Write(p)
 }
